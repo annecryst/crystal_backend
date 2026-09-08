@@ -80,4 +80,64 @@ export class AuthService {
       return false;
     }
   }
+
+  async checkAdminExists(): Promise<boolean> {
+    const admin = await this.userRepository.findOne({
+      where: { type: 'Admin' as any },
+    });
+    return !!admin;
+  }
+
+  async registerAdmin(
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const adminExists = await this.checkAdminExists();
+    if (adminExists) {
+      return { success: false, message: 'An admin account already exists.' };
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = this.userRepository.create({
+        email,
+        password: hashedPassword,
+        type: 'Admin' as any,
+      });
+      await this.userRepository.save(user);
+      return { success: true, message: 'Admin registered successfully!' };
+    } catch (e) {
+      console.error(e);
+      return { success: false, message: 'Registration failed.' };
+    }
+  }
+
+  async loginAdmin(
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; message: string; user?: any }> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email, type: 'Admin' as any },
+      });
+
+      if (!user || !user.password) {
+        return { success: false, message: 'Invalid email or password.' };
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return { success: false, message: 'Invalid email or password.' };
+      }
+
+      return {
+        success: true,
+        message: 'Login successful!',
+        user: { id: user.id, email: user.email, type: user.type },
+      };
+    } catch (e) {
+      console.error(e);
+      return { success: false, message: 'Login failed.' };
+    }
+  }
 }

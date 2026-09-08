@@ -5,6 +5,22 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Post('register')
+  async register(@Body() body: { email: string; password: string }) {
+    return this.authService.registerAdmin(body.email, body.password);
+  }
+
+  @Post('login')
+  async login(@Body() body: { email: string; password: string }) {
+    return this.authService.loginAdmin(body.email, body.password);
+  }
+
+  @Post('check-admin-exists')
+  async checkAdminExists() {
+    const exists = await this.authService.checkAdminExists();
+    return { exists };
+  }
+
   @Post('check-email')
   async checkEmail(@Body('email') email: string) {
     const exists = await this.authService.checkEmailExists(email);
@@ -31,3 +47,4 @@ export class AuthController {
     return { message: 'Password reset successfully' };
   }
 }
+
