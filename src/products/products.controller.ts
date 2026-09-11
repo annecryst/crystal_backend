@@ -38,11 +38,14 @@ export class ProductsController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('productName') productName?: string,
+  ) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
-    const url = await this.productsService.uploadImage(file);
+    const url = await this.productsService.uploadImage(file, productName);
     return { url };
   }
 }

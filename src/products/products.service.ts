@@ -82,10 +82,11 @@ export class ProductsService {
     await this.productRepository.delete(id);
   }
 
-  async uploadImage(file: Express.Multer.File): Promise<string> {
+  async uploadImage(file: Express.Multer.File, productName?: string): Promise<string> {
     try {
       const fileExt = file.originalname.split('.').pop();
-      const fileName = `${Date.now()}_${Math.floor(Math.random() * 10000)}.${fileExt}`;
+      const prefix = productName ? productName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase() : 'image';
+      const fileName = `${prefix}_${Date.now()}_${Math.floor(Math.random() * 10000)}.${fileExt}`;
       
       const { data, error } = await this.supabase.storage
         .from('prod_images')
