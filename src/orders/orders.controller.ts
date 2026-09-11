@@ -26,6 +26,11 @@ export class OrdersController {
     return this.ordersService.createOrder(body);
   }
 
+  @Get()
+  async findAll() {
+    return this.ordersService.findAll();
+  }
+
   @Get('user/:userId')
   async findByUser(@Param('userId') userId: string) {
     return this.ordersService.findByUser(userId);

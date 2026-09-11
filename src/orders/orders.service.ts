@@ -56,11 +56,22 @@ export class OrdersService {
   async findByUser(userId: string): Promise<Order[]> {
     return this.orderRepository.find({
       where: { userId },
+      relations: ['items'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findAll(): Promise<Order[]> {
+    return this.orderRepository.find({
+      relations: ['items'],
       order: { createdAt: 'DESC' },
     });
   }
 
   async findOne(id: string): Promise<Order | null> {
-    return this.orderRepository.findOne({ where: { id } });
+    return this.orderRepository.findOne({ 
+      where: { id },
+      relations: ['items'],
+    });
   }
 }
