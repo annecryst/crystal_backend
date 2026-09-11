@@ -140,4 +140,59 @@ export class AuthService {
       return { success: false, message: 'Login failed.' };
     }
   }
+
+  async registerCustomer(
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const existingUser = await this.userRepository.findOne({
+        where: { email },
+      });
+      if (existingUser) {
+        return { success: false, message: 'Email already registered.' };
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = this.userRepository.create({
+        email,
+        password: hashedPassword,
+        type: 'Customer' as any,
+      });
+      await this.userRepository.save(user);
+      return { success: true, message: 'Customer registered successfully!' };
+    } catch (e) {
+      console.error(e);
+      return { success: false, message: 'Registration failed.' };
+    }
+  }
+
+  async loginCustomer(
+    email: string,
+    password: string,
+  ): Promise<{ success: boolean; message: string; user?: any }> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email, type: 'Customer' as any },
+      });
+
+      if (!user || !user.password) {
+        return { success: false, message: 'Invalid email or password.' };
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return { success: false, message: 'Invalid email or password.' };
+      }
+
+      return {
+        success: true,
+        message: 'Login successful!',
+        user: { id: user.id, email: user.email, type: user.type },
+      };
+    } catch (e) {
+      console.error(e);
+      return { success: false, message: 'Login failed.' };
+    }
+  }
 }

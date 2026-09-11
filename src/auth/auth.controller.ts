@@ -46,5 +46,15 @@ export class AuthController {
     if (!success) throw new HttpException('Failed to reset password', HttpStatus.INTERNAL_SERVER_ERROR);
     return { message: 'Password reset successfully' };
   }
+
+  @Post('customer-register')
+  async customerRegister(@Body() body: { email: string; password: string }) {
+    return this.authService.registerCustomer(body.email, body.password);
+  }
+
+  @Post('customer-login')
+  async customerLogin(@Body() body: { email: string; password: string }) {
+    return this.authService.loginCustomer(body.email, body.password);
+  }
 }
 
