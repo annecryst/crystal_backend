@@ -33,7 +33,7 @@ export class OrdersService {
         userEmail: orderData.userEmail,
         totalAmount: orderData.totalAmount,
         paymentMethod: orderData.paymentMethod as any,
-        paymentReference: orderData.paymentReference || null,
+        paymentReference: orderData.paymentReference || undefined,
         items: orderData.items.map((item) =>
           this.orderItemRepository.create({
             productId: item.productId,
