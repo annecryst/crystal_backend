@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from './entities/product.entity';
@@ -11,11 +12,19 @@ export class ProductsService {
   constructor(
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly configService: ConfigService,
   ) {
-    this.supabase = createClient(
-      process.env.SUPABASE_URL || '',
-      process.env.SUPABASE_ANON_KEY || ''
-    );
+    const supabaseUrl = this.configService.get<string>('SUPABASE_URL');
+    const supabaseKey = this.configService.get<string>('SUPABASE_ANON_KEY');
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        `Missing Supabase config: SUPABASE_URL=${supabaseUrl ? 'set' : 'MISSING'}, SUPABASE_ANON_KEY=${supabaseKey ? 'set' : 'MISSING'}. ` +
+        'Set these as environment variables on your deployment platform (e.g. Render dashboard).',
+      );
+    }
+
+    this.supabase = createClient(supabaseUrl, supabaseKey);
   }
 
   async findAll(): Promise<Product[]> {
