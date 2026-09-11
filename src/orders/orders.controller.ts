@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -39,5 +39,10 @@ export class OrdersController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.ordersService.findOne(id);
+  }
+
+  @Patch(':id/status')
+  async updateStatus(@Param('id') id: string, @Body('status') status: string) {
+    return this.ordersService.updateStatus(id, status);
   }
 }

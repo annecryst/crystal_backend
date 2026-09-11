@@ -26,6 +26,7 @@ export class OrdersService {
       price: number;
       subtotal: number;
     }>;
+    location?: string;
   }): Promise<{ success: boolean; message: string; order?: Order }> {
     try {
       const order = this.orderRepository.create({
@@ -34,6 +35,7 @@ export class OrdersService {
         totalAmount: orderData.totalAmount,
         paymentMethod: orderData.paymentMethod as any,
         paymentReference: orderData.paymentReference || undefined,
+        location: orderData.location || undefined,
         items: orderData.items.map((item) =>
           this.orderItemRepository.create({
             productId: item.productId,
@@ -73,5 +75,19 @@ export class OrdersService {
       where: { id },
       relations: { items: true },
     });
+  }
+
+  async updateStatus(id: string, status: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const order = await this.orderRepository.findOne({ where: { id } });
+      if (!order) return { success: false, message: 'Order not found' };
+
+      order.status = status as any;
+      await this.orderRepository.save(order);
+      return { success: true, message: 'Order status updated successfully' };
+    } catch (e) {
+      console.error(e);
+      return { success: false, message: 'Failed to update order status' };
+    }
   }
 }

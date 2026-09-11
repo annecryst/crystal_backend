@@ -3,11 +3,10 @@ import { OrderItem } from './order-item.entity';
 
 export enum OrderStatus {
   PENDING = 'Pending',
-  CONFIRMED = 'Confirmed',
-  PREPARING = 'Preparing',
-  READY = 'Ready',
+  PAID = 'Paid',
+  ON_DELIVERY = 'On Delivery',
+  CANCELED = 'Canceled/Rejected',
   COMPLETED = 'Completed',
-  CANCELLED = 'Cancelled',
 }
 
 export enum PaymentMethod {
@@ -39,6 +38,9 @@ export class Order {
 
   @Column({ name: 'payment_reference', type: 'varchar', length: 255, nullable: true })
   paymentReference: string;
+
+  @Column({ name: 'location', type: 'text', nullable: true })
+  location: string;
 
   @Column({
     type: 'enum',
