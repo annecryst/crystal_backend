@@ -1,4 +1,23 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
+import { UsersService } from './users.service';
 
 @Controller('users')
-export class UsersController {}
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  async findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Get('customers')
+  async findAllCustomers() {
+    return this.usersService.findAllCustomers();
+  }
+
+  @Get('customers/count')
+  async getCustomerCount() {
+    const count = await this.usersService.getCustomerCount();
+    return { count };
+  }
+}
