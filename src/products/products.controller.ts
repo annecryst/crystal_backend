@@ -1,5 +1,7 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { ProductsService } from './products.service';
+import { Product } from './entities/product.entity';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('products')
 export class ProductsController {
@@ -16,5 +18,31 @@ export class ProductsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.productsService.findOne(id);
+  }
+
+  @Post()
+  async create(@Body() productData: Partial<Product>) {
+    return this.productsService.create(productData);
+  }
+
+  @Put(':id')
+  async update(@Param('id') id: string, @Body() productData: Partial<Product>) {
+    return this.productsService.update(id, productData);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    await this.productsService.delete(id);
+    return { success: true, message: 'Product deleted successfully' };
+  }
+
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+    const url = await this.productsService.uploadImage(file);
+    return { url };
   }
 }

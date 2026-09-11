@@ -27,4 +27,7 @@ export class Product {
     enum: ProductCategory,
   })
   category: ProductCategory;
+
+  @Column({ name: 'image_url', type: 'text', nullable: true })
+  imageUrl: string;
 }
