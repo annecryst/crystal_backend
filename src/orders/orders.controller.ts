@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Patch, Body, Param } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Body, Param, Query, Res } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 @Controller('orders')
@@ -95,5 +95,18 @@ export class OrdersController {
   async handlePaymongoWebhook(@Body() payload: any) {
     const success = await this.ordersService.handlePaymongoWebhook(payload);
     return { success };
+  @Get('payment-success')
+  async paymentSuccess(@Query('order_id') orderId: string, @Res() res: any) {
+    if (orderId) {
+      await this.ordersService.updateStatus(orderId, 'Paid');
+    }
+    // Redirect to a simple success page or back to the app using a deep link if configured
+    return res.send('<html><body><h2>Payment Successful!</h2><p>You can close this window and return to the Crystalicious app.</p></body></html>');
+  }
+
+  @Get('payment-cancelled')
+  async paymentCancelled(@Query('order_id') orderId: string, @Res() res: any) {
+    // You might want to update status to Cancelled or just leave it Pending
+    return res.send('<html><body><h2>Payment Cancelled</h2><p>You can close this window and return to the Crystalicious app.</p></body></html>');
   }
 }

@@ -114,6 +114,9 @@ export class OrdersService {
       quantity: item.quantity,
     }));
 
+    // Backend URL for redirects and webhooks
+    const backendUrl = process.env.RENDER_EXTERNAL_URL || process.env.BACKEND_URL || 'https://crystal-backend-rrem.onrender.com';
+
     try {
       const response = await fetch('https://api.paymongo.com/v1/checkout_sessions', {
         method: 'POST',
@@ -138,7 +141,12 @@ export class OrdersService {
                 'billease',
                 'qrph',
               ],
+              success_url: `${backendUrl}/orders/payment-success?order_id=${orderId}`,
+              cancel_url: `${backendUrl}/orders/payment-cancelled?order_id=${orderId}`,
               reference_number: orderId,
+              metadata: {
+                order_id: orderId,
+              },
             },
           },
         }),
@@ -146,6 +154,13 @@ export class OrdersService {
 
       const data = (await response.json()) as any;
       if (data?.data?.attributes?.checkout_url) {
+        // Store the checkout session ID for later verification
+        const checkoutSessionId = data.data.id;
+        const order = await this.orderRepository.findOne({ where: { id: orderId } });
+        if (order) {
+          order.paymentReference = checkoutSessionId;
+          await this.orderRepository.save(order);
+        }
         return data.data.attributes.checkout_url;
       }
       console.error('PayMongo checkout session error:', JSON.stringify(data));
