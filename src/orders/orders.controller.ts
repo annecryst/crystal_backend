@@ -45,4 +45,49 @@ export class OrdersController {
   async updateStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.ordersService.updateStatus(id, status);
   }
+
+  @Post('paymongo-checkout')
+  async createPaymongoCheckout(
+    @Body()
+    body: {
+      userId: string;
+      userEmail: string;
+      totalAmount: number;
+      paymentMethod: string;
+      items: Array<{
+        productId: string;
+        productName: string;
+        quantity: number;
+        price: number;
+        subtotal: number;
+      }>;
+    },
+  ) {
+    // Create the order as Pending
+    const orderResult = await this.ordersService.createOrder({
+      ...body,
+      paymentMethod: body.paymentMethod,
+    });
+
+    if (orderResult.success && orderResult.order) {
+      // Create PayMongo link
+      const checkoutUrl = await this.ordersService.createPaymongoCheckout(
+        orderResult.order.id,
+        body.totalAmount,
+        `Order ${orderResult.order.id}`
+      );
+      
+      if (checkoutUrl) {
+        return { success: true, checkoutUrl, orderId: orderResult.order.id };
+      }
+    }
+    
+    return { success: false, message: 'Failed to create checkout link' };
+  }
+
+  @Post('paymongo-webhook')
+  async handlePaymongoWebhook(@Body() payload: any) {
+    const success = await this.ordersService.handlePaymongoWebhook(payload);
+    return { success };
+  }
 }
