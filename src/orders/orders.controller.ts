@@ -46,6 +46,11 @@ export class OrdersController {
     return this.ordersService.updateStatus(id, status);
   }
 
+  @Get('paymongo/total-received')
+  async getPaymongoTotalReceived() {
+    return this.ordersService.getPaymongoTotalReceived();
+  }
+
   @Post('paymongo-checkout')
   async createPaymongoCheckout(
     @Body()

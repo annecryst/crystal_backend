@@ -152,4 +152,18 @@ export class OrdersService {
       return false;
     }
   }
+
+  async getPaymongoTotalReceived(): Promise<{ success: boolean; total: number }> {
+    try {
+      const result = await this.orderRepository.createQueryBuilder('order')
+        .select('SUM(order.totalAmount)', 'total')
+        .where('order.status = :status', { status: 'Paid' })
+        .getRawOne();
+        
+      return { success: true, total: parseFloat(result?.total || '0') };
+    } catch (e) {
+      console.error(e);
+      return { success: false, total: 0 };
+    }
+  }
 }
