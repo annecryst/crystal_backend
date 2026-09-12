@@ -12,6 +12,7 @@ export enum OrderStatus {
 export enum PaymentMethod {
   CASH = 'Cash',
   GCASH = 'GCash',
+  ONLINE_PAYMENT = 'Online Payment',
 }
 
 @Entity('orders')

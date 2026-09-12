@@ -75,11 +75,12 @@ export class OrdersController {
     });
 
     if (orderResult.success && orderResult.order) {
-      // Create PayMongo link
+      // Create PayMongo Checkout Session
       const checkoutUrl = await this.ordersService.createPaymongoCheckout(
         orderResult.order.id,
         body.totalAmount,
-        `Order ${orderResult.order.id}`
+        `Crystalicious Order #${orderResult.order.id}`,
+        body.items,
       );
       
       if (checkoutUrl) {
@@ -87,7 +88,7 @@ export class OrdersController {
       }
     }
     
-    return { success: false, message: 'Failed to create checkout link' };
+    return { success: false, message: 'Failed to create checkout session' };
   }
 
   @Post('paymongo-webhook')

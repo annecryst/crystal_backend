@@ -91,7 +91,12 @@ export class OrdersService {
     }
   }
 
-  async createPaymongoCheckout(orderId: string, amount: number, description: string): Promise<string | null> {
+  async createPaymongoCheckout(
+    orderId: string,
+    amount: number,
+    description: string,
+    items: Array<{ productName: string; quantity: number; price: number; subtotal: number }>,
+  ): Promise<string | null> {
     const secretKey = process.env.PAYMONGO_SECRET_KEY;
     if (!secretKey) {
       console.error('PAYMONGO_SECRET_KEY is not set');
@@ -99,43 +104,64 @@ export class OrdersService {
     }
 
     const encodedKey = Buffer.from(secretKey + ':').toString('base64');
-    
+
+    // Build line_items from order items
+    const line_items = items.map((item) => ({
+      currency: 'PHP',
+      amount: Math.round(item.price * 100), // amount in centavos
+      description: item.productName,
+      name: item.productName,
+      quantity: item.quantity,
+    }));
+
     try {
-      const response = await fetch('https://api.paymongo.com/v1/links', {
+      const response = await fetch('https://api.paymongo.com/v1/checkout_sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${encodedKey}`
+          'Authorization': `Basic ${encodedKey}`,
         },
         body: JSON.stringify({
           data: {
             attributes: {
-              amount: Math.round(amount * 100), // amount in centavos
+              send_email_receipt: false,
+              show_description: true,
+              show_line_items: true,
               description: description,
-              reference_number: orderId
-            }
-          }
-        })
+              line_items: line_items,
+              payment_method_types: [
+                'gcash',
+                'grab_pay',
+                'paymaya',
+                'card',
+                'dob',
+                'billease',
+                'qrph',
+              ],
+              reference_number: orderId,
+            },
+          },
+        }),
       });
 
-      const data = await response.json() as any;
+      const data = (await response.json()) as any;
       if (data?.data?.attributes?.checkout_url) {
         return data.data.attributes.checkout_url;
       }
+      console.error('PayMongo checkout session error:', JSON.stringify(data));
       return null;
     } catch (e) {
-      console.error('Error creating PayMongo link', e);
+      console.error('Error creating PayMongo checkout session', e);
       return null;
     }
   }
 
   async handlePaymongoWebhook(payload: any): Promise<boolean> {
     try {
-      // Typically payload.data.attributes.type === 'link.payment.paid' for Links
-      // or 'payment.paid' depending on what's configured
       const eventType = payload?.data?.attributes?.type;
       
-      if (eventType === 'link.payment.paid') {
+      // Support both checkout_session and link payment events
+      if (eventType === 'checkout_session.payment.paid' || eventType === 'link.payment.paid') {
         const referenceNumber = payload?.data?.attributes?.data?.attributes?.reference_number;
         if (referenceNumber) {
           const order = await this.orderRepository.findOne({ where: { id: referenceNumber } });
