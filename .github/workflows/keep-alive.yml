@@ -13,9 +13,12 @@ jobs:
       - name: Ping Render Backend
         run: |
           echo "Pinging backend at $(date -u)"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 https://crystal-backend-rrem.onrender.com)
+          # Give Render up to 120 seconds to spin up, and use || true to prevent script failure on timeout
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 120 https://crystal-backend-rrem.onrender.com || echo "timeout")
           echo "Response status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 500 ]; then
+          if [ "$HTTP_STATUS" = "timeout" ]; then
+            echo "⚠️ Backend ping timed out or failed to connect."
+          elif [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 500 ]; then
             echo "✅ Backend is alive!"
           else
             echo "⚠️ Backend responded with status $HTTP_STATUS"
